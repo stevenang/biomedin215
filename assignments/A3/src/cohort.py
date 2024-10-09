@@ -55,11 +55,18 @@ def filter_df(df: pd.DataFrame, filter_col: str, value_list: List[Any]) -> pd.Da
     filtered_df = None
 
     # ==================== YOUR CODE HERE ====================
-    
-    # TODO: Implement
-    
+    # Check if filter_col is in the given dataframe
+    if filter_col not in df.columns:
+        raise ValueError(f"Column {filter_col} is not in the DataFrame")
+
+    # Return an empty DataFrame with the same columns if value_list is empty
+    if not value_list:
+        return df.head(0)
+
+    filtered_df = df[df[filter_col].isin(value_list)]
+
     # ==================== YOUR CODE HERE ====================
-    
+
     # Return the filtered DataFrame
     return filtered_df
 
@@ -108,11 +115,22 @@ def get_dev_cohort_list(df: pd.DataFrame, num_subject_ids: int = 1000):
 
 
     # ==================== YOUR CODE HERE ====================
-    
-    # TODO: Implement
-    
+
+    # If <num_subject_ids> is less than or equal to 0, return an empty list.
+    if num_subject_ids <= 0:
+        return subject_ids
+
+    # Get unique subject_ids and cast them to integers
+    unique_subject_ids = df['subject_id'].unique().astype(int)
+
+    # Sort the unique_subject_ids and returned a sorted list
+    subject_ids = np.sort(unique_subject_ids).tolist()
+
+    if len(subject_ids) >= num_subject_ids:
+        subject_ids = subject_ids[:num_subject_ids]
+
     # ==================== YOUR CODE HERE ====================
-    
+
     # Return the DataFrame
     return subject_ids
 
@@ -158,8 +176,10 @@ def join_infections(df_1: pd.DataFrame, df_2: pd.DataFrame):
 
 
     # ==================== YOUR CODE HERE ====================
-    
+
     # TODO: Implement
+    joined_df = pd.merge(df_1, df_2, on=['subject_id', 'hadm_id'], how='outer')
+    joined_df.fillna(value=0, inplace=True)
     
     # ==================== YOUR CODE HERE ====================
     
