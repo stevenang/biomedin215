@@ -76,6 +76,13 @@ def summarize_by_mean(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    if column_to_summarize not in df.columns:
+        raise ValueError(f"Column '{column_to_summarize}' not found in DataFrame")
+
+    if not columns_to_group_by:
+        columns_to_group_by = [col for col in df.columns if col != column_to_summarize]
+
+    summarized_df = df.groupby(columns_to_group_by)[column_to_summarize].mean().reset_index()
     
     # ==================== YOUR CODE HERE ====================
     
@@ -138,6 +145,12 @@ def pivot_wide(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    if index_columns is None:
+        index_columns = [col for col in df.columns if col not in [columns, values]]
+
+    wide_df = df.pivot_table(index=index_columns, columns=columns, values=values, aggfunc='first')
+    wide_df = wide_df.reset_index()
+    wide_df.columns = [f"{col[0]}_{col[1]}" if isinstance(col, tuple) else col for col in wide_df.columns]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -182,6 +195,8 @@ def merge_dataframes(dataframe_A: pd.DataFrame, dataframe_B: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    merge_columns = ['subject_id', 'hadm_id', 'icustay_id', 'charttime']
+    merged_df = pd.merge(dataframe_A, dataframe_B, on=merge_columns, how='outer')
     
     # ==================== YOUR CODE HERE ====================
     
@@ -221,12 +236,17 @@ def impute_missing(dataframe: pd.DataFrame):
     """
 
     # Overwrite this variable with the return value
-    imputed_df = None
+    imputed_df = dataframe.copy()
 
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
+    # Sort the dataframe by subject_id and charttime
+    imputed_df = imputed_df.sort_values(['subject_id', 'charttime'])
+
+    # Group by subject_id and forward fill the missing values
+    imputed_df = imputed_df.groupby('subject_id').fillna(method='ffill')
+
     # ==================== YOUR CODE HERE ====================
     
 
