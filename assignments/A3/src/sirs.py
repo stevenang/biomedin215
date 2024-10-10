@@ -13,6 +13,7 @@ IMPORTANT INSTRUCTIONS:
 
 # Imports - Do not modify
 import pandas as pd
+from pygments.lexers.ruby import FancyLexer
 
 
 def summarize_sirs(df: pd.DataFrame) -> pd.DataFrame:
@@ -57,17 +58,21 @@ def summarize_sirs(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     # Overwrite this variable with the return value
-    sirs_df = None
+    sirs_df = df.copy()
 
 
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    get_criteria_1(sirs_df)
+    get_criteria_2(sirs_df)
+    get_criteria_3(sirs_df)
+    get_criteria_4(sirs_df)
     
     # ==================== YOUR CODE HERE ====================
     
 
-    return sirs_df
+    return sirs_df[['subject_id', 'hadm_id', 'icustay_id', 'charttime', 'criteria_1', 'criteria_2', 'criteria_3', 'criteria_4']]
 
 
 def get_criteria_1(sirs_df: pd.DataFrame) -> None:
@@ -106,8 +111,9 @@ def get_criteria_1(sirs_df: pd.DataFrame) -> None:
 
 
     # ==================== YOUR CODE HERE ====================
-    
+
     # TODO: Implement
+    sirs_df['criteria_1'] = (sirs_df['TempC'].lt(36) | sirs_df['TempC'].gt(38))
     
     # ==================== YOUR CODE HERE ====================
     
@@ -150,6 +156,7 @@ def get_criteria_2(sirs_df: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    sirs_df['criteria_2'] = sirs_df['HeartRate'].gt(90)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -192,7 +199,11 @@ def get_criteria_3(sirs_df: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
+    sirs_df['criteria_3'] = (
+            (sirs_df['RespRate'].notna() & sirs_df['RespRate'].gt(20)) |
+            (sirs_df['PaCO2'].notna() & sirs_df['PaCO2'].lt(32))
+    )
+
     # ==================== YOUR CODE HERE ====================
     
 
@@ -237,6 +248,7 @@ def get_criteria_4(sirs_df: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    sirs_df['criteria_4'] = (sirs_df['WBC'].gt(12) | sirs_df['WBC'].lt(4) | sirs_df['BANDS'].gt(10))
     
     # ==================== YOUR CODE HERE ====================
     

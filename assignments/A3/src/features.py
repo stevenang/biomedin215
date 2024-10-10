@@ -67,8 +67,10 @@ def summarize_by_mean(
     """
 
     # Set default value for columns_to_group_by
+    # If <columns_to_group_by> is [] or None, group by all columns except <column_to_summarize>
     if columns_to_group_by is None:
-        columns_to_group_by = []
+        columns_to_group_by = df.columns.tolist()
+        columns_to_group_by.remove(column_to_summarize)
 
     # Overwrite this variable with the return value
     summarized_df = None
@@ -76,9 +78,12 @@ def summarize_by_mean(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+
+    # If <column_to_summarize> is not in the DataFrame, raise a ValueError.
     if column_to_summarize not in df.columns:
         raise ValueError(f"Column '{column_to_summarize}' not found in DataFrame")
 
+    # If <column_to_summarize> is not in the DataFrame, raise a ValueError.
     if not columns_to_group_by:
         columns_to_group_by = [col for col in df.columns if col != column_to_summarize]
 
@@ -195,6 +200,7 @@ def merge_dataframes(dataframe_A: pd.DataFrame, dataframe_B: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Define column or index level names to join on
     merge_columns = ['subject_id', 'hadm_id', 'icustay_id', 'charttime']
     merged_df = pd.merge(dataframe_A, dataframe_B, on=merge_columns, how='outer')
     
@@ -244,11 +250,14 @@ def impute_missing(dataframe: pd.DataFrame):
     # Sort the dataframe by subject_id and charttime
     imputed_df = imputed_df.sort_values(['subject_id', 'charttime'])
 
+    # Store the subject_id column separately
+    subject_id_column = imputed_df['subject_id']
+
     # Group by subject_id and forward fill the missing values
-    imputed_df = imputed_df.groupby('subject_id').fillna(method='ffill')
+    imputed_df = imputed_df.groupby(['icustay_id']).apply(lambda x: x.ffill())
+    imputed_df = imputed_df.reset_index(level='icustay_id', drop=True).reset_index(drop=True)
 
     # ==================== YOUR CODE HERE ====================
-    
 
     # Return the imputed DataFrame
     return imputed_df
