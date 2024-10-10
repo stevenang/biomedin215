@@ -196,6 +196,31 @@ def summarize_icd9(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # First, use the `subject_ids` parameter to restrict the diagnoses DataFrame to only
+    # the subject_ids that appear in the `subject_ids` list.
+    filtered_diagnoses = diagnoses[diagnoses['subject_id'].isin(subject_ids)].copy()
+
+    # A patient should be considered to have an infection if any of the corresponding ICD-9 codes
+    # in the `icd9_code` column start with ANY of the relevant ICD-9 code prefixes
+    def has_relevant_icd_code(code):
+        if pd.isna(code):
+            return False
+        return any(code.startswith(prefix) for prefix in icd9_prefixes)
+
+    # Use the helper function to populate indicator with indicator_column_name
+    filtered_diagnoses[indicator_column_name] = filtered_diagnoses['icd9_code'].apply(has_relevant_icd_code)
+
+    # Group the dataframe by both 'subject_id', 'hadm_id'
+    # Use 'max' to get True if any row has infection
+    icd9_df = filtered_diagnoses.groupby(['subject_id', 'hadm_id']).agg({
+        'has_icd9_infection': 'max'
+    }).reset_index()
+
+    # Convert boolean to int (1 for True, 0 for False)
+    icd9_df['has_infection'] = icd9_df['has_icd9_infection'].astype(int)
+
+    # Drop the original 'has_icd9_infection' column if you don't need it
+    icd9_df = icd9_df.drop('has_icd9_infection', axis=1)
     
     # ==================== YOUR CODE HERE ====================
     

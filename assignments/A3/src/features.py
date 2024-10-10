@@ -248,14 +248,13 @@ def impute_missing(dataframe: pd.DataFrame):
     
     # TODO: Implement
     # Sort the dataframe by subject_id and charttime
-    imputed_df = imputed_df.sort_values(['subject_id', 'charttime'])
+    imputed_df = imputed_df.sort_values(['subject_id', 'hadm_id', 'icustay_id', 'charttime'])
 
-    # Store the subject_id column separately
-    subject_id_column = imputed_df['subject_id']
+    # Group by icustay_id and forward fill the missing values
+    imputed_df = imputed_df.groupby(['subject_id', 'hadm_id', 'icustay_id']).apply(lambda x: x.ffill())
 
-    # Group by subject_id and forward fill the missing values
-    imputed_df = imputed_df.groupby(['icustay_id']).apply(lambda x: x.ffill())
-    imputed_df = imputed_df.reset_index(level='icustay_id', drop=True).reset_index(drop=True)
+    # This line will reset the index of the imputed_df
+    imputed_df.reset_index(drop=True, inplace=True)
 
     # ==================== YOUR CODE HERE ====================
 
