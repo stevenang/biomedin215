@@ -68,13 +68,30 @@ def summarize_notes(notes: pd.DataFrame, indicator_column_name: str) -> pd.DataF
     """
 
     # Overwrite this variable with the return value
-    infection_df = None
+    infection_df = notes.copy()
 
 
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
+    # This is a helper function to check if any search string is in the note text
+    def has_infection(note):
+        if pd.isna(note):
+            return False
+        return any(search_string.lower() in note.lower() for search_string in SEARCH_STRINGS)
+
+    # Apply the helper function to the note_text column
+    infection_df['has_infection_check_result'] = infection_df['note_text'].apply(has_infection)
+
+    # Group by 'subject_id' and 'hadm_id' and check if any note indicates infection
+    infection_df = infection_df.groupby(['subject_id', 'hadm_id'])['has_infection_check_result'].any().reset_index()
+
+    # Rename the column to the specified indicator_column_name
+    infection_df = infection_df.rename(columns={'has_infection_check_result': indicator_column_name})
+
+    # Select only the required columns
+    infection_df = infection_df[['subject_id', 'hadm_id', indicator_column_name]]
+
     # ==================== YOUR CODE HERE ====================
     
 
