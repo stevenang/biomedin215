@@ -208,19 +208,19 @@ def summarize_icd9(
         return any(code.startswith(prefix) for prefix in icd9_prefixes)
 
     # Use the helper function to populate indicator with indicator_column_name
-    filtered_diagnoses[indicator_column_name] = filtered_diagnoses['icd9_code'].apply(has_relevant_icd_code)
+    filtered_diagnoses['icd9_code_result'] = filtered_diagnoses['icd9_code'].apply(has_relevant_icd_code)
 
     # Group the dataframe by both 'subject_id', 'hadm_id'
     # Use 'max' to get True if any row has infection
     icd9_df = filtered_diagnoses.groupby(['subject_id', 'hadm_id']).agg({
-        'has_icd9_infection': 'max'
+        'icd9_code_result': 'max'
     }).reset_index()
 
     # Convert boolean to int (1 for True, 0 for False)
-    icd9_df['has_infection'] = icd9_df['has_icd9_infection'].astype(int)
+    icd9_df[indicator_column_name] = icd9_df['icd9_code_result'].astype(int)
 
-    # Drop the original 'has_icd9_infection' column if you don't need it
-    icd9_df = icd9_df.drop('has_icd9_infection', axis=1)
+    # Drop the original 'has_icd9_infection' column
+    icd9_df = icd9_df.drop('icd9_code_result', axis=1)
     
     # ==================== YOUR CODE HERE ====================
     

@@ -61,6 +61,15 @@ def summarize_sepsis(dev_sirs: pd.DataFrame, all_infections: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    sepsis_summary = pd.merge(
+        dev_sirs,
+        all_infections,
+        on=['subject_id', 'hadm_id'],
+        how='inner',
+    )
+
+    # Call the get_sepsis_status function to add the sepsis_status column
+    get_sepsis_status(sepsis_summary)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -100,6 +109,15 @@ def get_sepsis_status(sepsis_summary: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Count the number of SIRS criteria met (True values in criteria_1 to criteria_4)
+    sirs_criteria_met = sepsis_summary[['criteria_1', 'criteria_2', 'criteria_3', 'criteria_4']].sum(axis=1)
+
+    # Check if there's a suspected infection (either from ICD-9 codes or notes)
+    suspected_infection = sepsis_summary['has_icd9_infection'] | sepsis_summary['has_note_infection']
+
+    # Define sepsis status: two or more SIRS criteria AND suspected infection
+    sepsis_summary['sepsis_status'] = (sirs_criteria_met >= 2) & suspected_infection
+
     
     # ==================== YOUR CODE HERE ====================
     
@@ -157,6 +175,18 @@ def summarize_severe_sepsis(dev_sepsis: pd.DataFrame, organ_dys: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    severe_sepsis_summary = pd.merge(
+        dev_sepsis,
+        organ_dys,
+        on=['subject_id', 'hadm_id'],
+        how='inner'
+    )
+
+    # Create the severe_sepsis_status column
+    severe_sepsis_summary['severe_sepsis_status'] = (
+            severe_sepsis_summary['sepsis_status'] &
+            severe_sepsis_summary['has_organ_dysfunction']
+    )
     
     # ==================== YOUR CODE HERE ====================
     
@@ -228,8 +258,43 @@ def summarize_septic_shock(
 
 
     # ==================== YOUR CODE HERE ====================
-    
+
     # TODO: Implement
+    # Data cleanup. I noticed in some items in fluids_all doesn't contains 'hadm_id' and 'icustay_id', so we need to clean the data before using it
+    fluids_all.dropna(subset=['hadm_id', 'icustay_id'], inplace=True)
+
+    # Define join keys
+    join_keys = ['subject_id', 'hadm_id', 'icustay_id', 'charttime']
+    # Join dev_severe_sepsis and fluids_all using ['subject_id', 'hadm_id', 'icustay_id', 'charttime']
+    septic_shock_summary = pd.merge(dev_severe_sepsis, fluids_all, on=join_keys, how='outer')
+    # Join septic_shock_summary with hypotension_labels using ['subject_id', 'hadm_id', 'icustay_id', 'charttime']
+    septic_shock_summary = pd.merge(septic_shock_summary, hypotension_labels, on=join_keys, how='outer')
+
+    # Sort the DataFrameby ['subject_id', 'hadm_id', 'icustay_id', 'charttime'] to ensure correct LOCF
+    septic_shock_summary.sort_values(join_keys, inplace=True)
+
+    # Perform LOCF within groups
+    group_columns = ['subject_id', 'hadm_id', 'icustay_id']
+    fill_columns = ['severe_sepsis_status', 'hypotension', 'adequate_fluid']
+
+    septic_shock_summary[fill_columns] = septic_shock_summary.groupby(group_columns)[fill_columns].ffill()
+
+    # Fill remaining missing values with False
+    septic_shock_summary[fill_columns] = septic_shock_summary[fill_columns].fillna(False)
+
+    septic_shock_summary.reset_index(inplace=True)
+    display(septic_shock_summary)
+
+    # Determine septic shock status
+    septic_shock_summary['septic_shock_status'] = (
+            septic_shock_summary['severe_sepsis_status'] &
+            septic_shock_summary['hypotension'] &
+            septic_shock_summary['adequate_fluid']
+    )
+
+    # Select only the required columns
+    required_columns = ['subject_id', 'hadm_id', 'icustay_id', 'charttime', 'septic_shock_status']
+    septic_shock_summary = septic_shock_summary[required_columns]
     
     # ==================== YOUR CODE HERE ====================
     

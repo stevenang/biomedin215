@@ -69,8 +69,7 @@ def summarize_by_mean(
     # Set default value for columns_to_group_by
     # If <columns_to_group_by> is [] or None, group by all columns except <column_to_summarize>
     if columns_to_group_by is None:
-        columns_to_group_by = df.columns.tolist()
-        columns_to_group_by.remove(column_to_summarize)
+        columns_to_group_by = []
 
     # Overwrite this variable with the return value
     summarized_df = None
