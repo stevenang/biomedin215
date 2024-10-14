@@ -178,7 +178,9 @@ def join_infections(df_1: pd.DataFrame, df_2: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
 
     # TODO: Implement
+    # Merge df_1, df_2 using ['subject_id', 'hadm_id']
     joined_df = pd.merge(df_1, df_2, on=['subject_id', 'hadm_id'], how='inner')
+    # Replace NA with 0
     joined_df.fillna(value=0, inplace=True)
     
     # ==================== YOUR CODE HERE ====================

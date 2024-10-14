@@ -61,6 +61,7 @@ def summarize_sepsis(dev_sirs: pd.DataFrame, all_infections: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Perform inner merge on dev_sirs and all_infections using ['subject_id', 'hadm_id']
     sepsis_summary = pd.merge(
         dev_sirs,
         all_infections,
@@ -175,6 +176,7 @@ def summarize_severe_sepsis(dev_sepsis: pd.DataFrame, organ_dys: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Merge dev_sepsis and organ_dys
     severe_sepsis_summary = pd.merge(
         dev_sepsis,
         organ_dys,
@@ -276,14 +278,12 @@ def summarize_septic_shock(
     # Perform LOCF within groups
     group_columns = ['subject_id', 'hadm_id', 'icustay_id']
     fill_columns = ['severe_sepsis_status', 'hypotension', 'adequate_fluid']
-
     septic_shock_summary[fill_columns] = septic_shock_summary.groupby(group_columns)[fill_columns].ffill()
 
     # Fill remaining missing values with False
     septic_shock_summary[fill_columns] = septic_shock_summary[fill_columns].fillna(False)
 
     septic_shock_summary.reset_index(inplace=True)
-    display(septic_shock_summary)
 
     # Determine septic shock status
     septic_shock_summary['septic_shock_status'] = (
