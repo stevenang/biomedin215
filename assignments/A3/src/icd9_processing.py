@@ -204,11 +204,12 @@ def summarize_icd9(
     # in the `icd9_code` column start with ANY of the relevant ICD-9 code prefixes
     def has_relevant_icd_code(code):
         if pd.isna(code):
-            return False
+            return
         return any(code.startswith(prefix) for prefix in icd9_prefixes)
 
     # Use the helper function to populate indicator with indicator_column_name
     filtered_diagnoses['icd9_code_result'] = filtered_diagnoses['icd9_code'].apply(has_relevant_icd_code)
+    filtered_diagnoses['icd9_code_result'].fillna(False, inplace=True)
 
     # Group the dataframe by both 'subject_id', 'hadm_id'
     # Use 'max' to get True if any row has infection

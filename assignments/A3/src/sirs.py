@@ -199,11 +199,7 @@ def get_criteria_3(sirs_df: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    sirs_df['criteria_3'] = (
-            (sirs_df['RespRate'].notna() & sirs_df['RespRate'].gt(20)) |
-            (sirs_df['PaCO2'].notna() & sirs_df['PaCO2'].lt(32))
-    )
-
+    sirs_df['criteria_3'] = (((sirs_df['RespRate'] > 20) | (sirs_df['PaCO2'] < 32)) & ~((sirs_df['RespRate'].isna()) | (sirs_df['PaCO2'].isna())))
     # ==================== YOUR CODE HERE ====================
     
 
@@ -248,7 +244,6 @@ def get_criteria_4(sirs_df: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    sirs_df['criteria_4'] = (sirs_df['WBC'].gt(12) | sirs_df['WBC'].lt(4) | sirs_df['BANDS'].gt(10))
-    
+    sirs_df['criteria_4'] = (((sirs_df['WBC'] > 12) | (sirs_df['WBC'] < 4) | (sirs_df['BANDS'] > 10)) & ~((sirs_df['WBC'].isna()) | (sirs_df['BANDS'].isna())))
     # ==================== YOUR CODE HERE ====================
     
