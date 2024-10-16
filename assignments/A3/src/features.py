@@ -67,6 +67,7 @@ def summarize_by_mean(
     """
 
     # Set default value for columns_to_group_by
+    # If <columns_to_group_by> is [] or None, group by all columns except <column_to_summarize>
     if columns_to_group_by is None:
         columns_to_group_by = []
 
@@ -76,6 +77,16 @@ def summarize_by_mean(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+
+    # If <column_to_summarize> is not in the DataFrame, raise a ValueError.
+    if column_to_summarize not in df.columns:
+        raise ValueError(f"Column '{column_to_summarize}' not found in DataFrame")
+
+    # If <column_to_summarize> is not in the DataFrame, raise a ValueError.
+    if not columns_to_group_by:
+        columns_to_group_by = [col for col in df.columns if col != column_to_summarize]
+
+    summarized_df = df.groupby(columns_to_group_by)[column_to_summarize].mean().reset_index()
     
     # ==================== YOUR CODE HERE ====================
     
@@ -138,6 +149,12 @@ def pivot_wide(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    if index_columns is None:
+        index_columns = [col for col in df.columns if col not in [columns, values]]
+
+    wide_df = df.pivot_table(index=index_columns, columns=columns, values=values, aggfunc='first')
+    wide_df = wide_df.reset_index()
+    wide_df.columns = [f"{col[0]}_{col[1]}" if isinstance(col, tuple) else col for col in wide_df.columns]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -182,6 +199,9 @@ def merge_dataframes(dataframe_A: pd.DataFrame, dataframe_B: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Define column or index level names to join on
+    merge_columns = ['subject_id', 'hadm_id', 'icustay_id', 'charttime']
+    merged_df = pd.merge(dataframe_A, dataframe_B, on=merge_columns, how='outer')
     
     # ==================== YOUR CODE HERE ====================
     
@@ -221,14 +241,21 @@ def impute_missing(dataframe: pd.DataFrame):
     """
 
     # Overwrite this variable with the return value
-    imputed_df = None
+    imputed_df = dataframe.copy()
 
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
+    # Sort the dataframe by subject_id and charttime
+    imputed_df = imputed_df.sort_values(['subject_id', 'hadm_id', 'icustay_id', 'charttime'])
+
+    # Group by icustay_id and forward fill the missing values
+    imputed_df = imputed_df.groupby(['subject_id', 'hadm_id', 'icustay_id']).apply(lambda x: x.ffill())
+
+    # This line will reset the index of the imputed_df
+    imputed_df.reset_index(drop=True, inplace=True)
+
     # ==================== YOUR CODE HERE ====================
-    
 
     # Return the imputed DataFrame
     return imputed_df
