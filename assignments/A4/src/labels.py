@@ -44,6 +44,7 @@ def filter_admissions(admissions: pd.DataFrame) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    filtered_admissions = admissions[admissions["dischtime"] - admissions["admittime"] >= timedelta(hours=12)]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -81,6 +82,9 @@ def merge_and_create_times(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    merged_df = pd.merge(cohort_labels, admissions, on=["subject_id", "hadm_id"], how="inner")
+    get_relative_charttime(merged_df)
+    get_index_time(merged_df)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -112,6 +116,7 @@ def get_relative_charttime(admissions: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    admissions["relative_charttime"] = (admissions["charttime"] - admissions["admittime"]) / pd.Timedelta(hours=1)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -139,6 +144,7 @@ def get_index_time(admissions: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    admissions["index_time"] = admissions["admittime"] + pd.Timedelta(hours=12)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -190,7 +196,27 @@ def get_shock_labels(merged_cohort: pd.DataFrame) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
+    label_df = merged_cohort.copy()
+
+    # Admissions where the earliest time of septic shock occurs prior to fifteen hours after admission are removed from the study.
+    excludes = label_df[(label_df['septic_shock']) & ((label_df["relative_charttime"]) < 15)]['hadm_id'].unique()
+    label_df = label_df[~label_df['hadm_id'].isin(excludes)]
+    pos_hadm = check_positive(label_df)
+    neg_hadm = check_negative(label_df)
+
+    # Labeled the hadm_id belongs to pos_hadm As True and assigned the value to column 'label'
+    label_df.loc[label_df['hadm_id'].isin(pos_hadm), 'label'] = True
+    # Labeled the hadm_id belongs to neg_hadm As False and assigned the value to column 'label'
+    label_df.loc[label_df['hadm_id'].isin(neg_hadm), 'label'] = False
+
+    # Sort the dataframe by 'subject_id' (ASC) and 'admittime' (DESC).
+    # This will result the latest admittime will be 1st record of the group
+    label_df = label_df.sort_values(by=['subject_id', 'admittime'], ascending=[True, False])
+    # We drop all records except the first one
+    label_df = label_df.drop_duplicates(subset='subject_id', keep='first')
+
+    label_df = label_df[["subject_id", "hadm_id", "admittime", "dischtime", "index_time", "label", "icustay_id"]]
+
     # ==================== YOUR CODE HERE ====================
     
 
@@ -202,3 +228,56 @@ def get_shock_labels(merged_cohort: pd.DataFrame) -> pd.DataFrame:
 #       that briefly describes the function and its parameters/returns.
 #       This will help us better understand your code for awarding partial credit.
 
+def check_negative(merged_cohort):
+    """
+    Identify admissions where septic shock never occurred
+    This function groups the data by admission id (hadm_id) and check if `septic_shock` never occurs during admission.
+
+    Args:
+        merged_cohort (pd.DataFrame): The DataFrame containing patient admission data.
+
+    Returns:
+        pd.Index: An Index of admission IDs (hadm_id) where septic shock never occurred.
+
+    """
+    df_shock_occured_in_admission = merged_cohort.groupby(by=['hadm_id'])['septic_shock'].max()
+    neg_shock_hadm_id = df_shock_occured_in_admission[~df_shock_occured_in_admission].index
+
+    return neg_shock_hadm_id
+
+def check_positive(merged_cohort):
+    """
+    Identify admissions where septic shock occurred 15 hours or later after admission.
+
+    This function filters the DataFrame to find cases where septic shock occurred
+    and the relative chart time is greater than or equal to 15 hours.
+
+    Parameters:
+    merged_cohort (pd.DataFrame): The DataFrame containing patient admission data.
+
+    Returns:
+    np.ndarray: An array of unique admission IDs (hadm_id) where septic shock
+                occurred 15 hours or later after admission.
+    """
+    merged_cohort_pos = merged_cohort[(merged_cohort['septic_shock']) & (merged_cohort['relative_charttime']>=15)]
+
+    return merged_cohort_pos['hadm_id'].unique()
+
+def check_exclude(merged_cohort):
+    """
+    Identify admissions where septic shock occurred earlier than 15 hours after admission.
+
+    This function filters the DataFrame to find cases where septic shock occurred
+    and the relative chart time is less than 15 hours.
+
+    Parameters:
+    merged_cohort (pd.DataFrame): The DataFrame containing patient admission data.
+
+    Returns:
+    np.ndarray: An array of unique admission IDs (hadm_id) where septic shock
+                occurred earlier than 15 hours after admission.
+    """
+
+    merged_cohort_exclude = merged_cohort[(merged_cohort['septic_shock']) & (merged_cohort['relative_charttime']<15)]
+
+    return merged_cohort_exclude['hadm_id'].unique()

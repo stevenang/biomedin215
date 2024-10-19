@@ -47,12 +47,19 @@ def preprocess_dates(
         inplace (bool): Whether or not to perform the operation in-place
     """
 
-    pass
-
     # ==================== YOUR CODE HERE ====================
-    
-    # TODO: Implement
-    
+
+    if inplace:
+        for date_column, date_format in zip(date_columns, date_formats):
+            df[date_column] = pd.to_datetime(df[date_column], format=date_format, utc=True)
+        return None
+    else:
+        df_converted = df.copy()
+        for date_column, date_format in zip(date_columns, date_formats):
+            df_converted[date_column] = pd.to_datetime(df_converted[date_column], format=date_format, utc=True)
+
+        return df_converted
+
     # ==================== YOUR CODE HERE ====================
     
 
