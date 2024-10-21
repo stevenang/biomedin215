@@ -48,6 +48,12 @@ def filter_by_chartdate(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    selected_shock_labels = shock_labels[["subject_id", "index_time"]]
+    merged_data = pd.merge(selected_shock_labels, notes, how="outer", on=["subject_id"])
+    merged_data['index_date'] =  [x.date() for x in merged_data['index_time']]
+    merged_data['chart_date'] =  [x.date() for x in merged_data['chartdate']]
+    notes_filtered = merged_data[merged_data['chart_date'] < merged_data['index_date']]
+    notes_filtered = notes_filtered[notes.columns]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -99,7 +105,15 @@ def merge_snomed(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
+    # Create a copy of parameters
+    snomed_ct_isaclosure_copy = snomed_ct_isaclosure.copy()
+    snomed_ct_str_cui_copy = snomed_ct_str_cui.copy()
+
+    # Perform inner merge
+    snomed_ct_concept_string = snomed_ct_isaclosure.merge(snomed_ct_str_cui, how='inner', left_on='descendant', right_on='CUI')
+
+    # Data cleanup
+    snomed_ct_concept_string = snomed_ct_concept_string[['ancestor','str']].rename(columns={'ancestor':'CUI', 'str':'term'})
     # ==================== YOUR CODE HERE ====================
     
 
@@ -143,6 +157,9 @@ def get_cui_list(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    term_list = snomed_ct_concept_string[snomed_ct_concept_string["CUI"] == cui]['term'].unique()
+    term_list = [x for x in term_list if len(x) <= character_limit]
+    term_list.sort(key=len)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -207,6 +224,15 @@ def extract_terms(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    if term_limit:
+        term_list_search = term_list[:term_limit]
+    else:
+        term_list_search = term_list
+
+    df_has_term= pd.DataFrame([notes_filtered['note_text'].str.contains(x, case=False, na=False, regex=False).astype(int) for x in term_list_search]).T
+    df_has_term.columns = term_list_search
+
+    nx_terms = pd.concat([notes_filtered, df_has_term], axis=1)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -260,6 +286,14 @@ def normalize_terms(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    result_df = nx_terms.copy()
+    term_cols = [x for x in result_df.columns if x not in ['subject_id', 'chartdate']]
+    result_df = result_df.melt(id_vars=['subject_id', 'chartdate'], value_vars=term_cols,
+                               var_name='term', value_name='contains', ignore_index=True)
+    result_df = result_df[result_df['contains']==1] ## filter for those that were
+
+    result_df = result_df.merge(snomed_ct_concept_string, on='term', how='inner')
+    result_df = result_df[['subject_id', 'chartdate', 'CUI']]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -308,6 +342,14 @@ def get_note_concept_features(concept_df: pd.DataFrame):
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    concept_features = pd.pivot_table(concept_df,
+                                      index='subject_id',
+                                      columns = 'CUI',
+                                      aggfunc="any", fill_value=0
+                                      ).astype(int)
+
+    concept_features.columns = [x[1] for x in concept_features.columns]
+    concept_features.reset_index(inplace=True)
     
     # ==================== YOUR CODE HERE ====================
     

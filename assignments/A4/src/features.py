@@ -10,6 +10,7 @@ IMPORTANT INSTRUCTIONS:
     - You may add additional helper functions if you wish.
     - Do NOT import anything other than what is already imported below.
 """
+from datetime import datetime, timedelta
 
 import pandas as pd
 import numpy as np
@@ -53,6 +54,17 @@ def get_diagnoses(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Select the column needed from each table
+    selected_admission = admissions[['subject_id', 'hadm_id', 'dischtime', 'admittime']]
+    selected_diagnoses = diagnoses[['subject_id', 'hadm_id', 'icd9_code']]
+    selected_shock_labels = shock_labels[['subject_id', 'hadm_id', 'index_time']]
+
+    # Merge the data
+    merged_data = pd.merge(selected_admission, selected_diagnoses, on=['subject_id', 'hadm_id'], how='inner')
+    merged_data = pd.merge(merged_data, selected_shock_labels, on=['subject_id'], how='inner')
+
+    # returned data only contains the diagnoses that occurred BEFORE the index_time
+    dx = merged_data[(merged_data["dischtime"] < merged_data["index_time"])]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -98,6 +110,19 @@ def calc_ic(dx_features: pd.DataFrame, all_patients_count: int) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Group the subject_id by the icd9_code associated to the subject_id
+    subject_counts = dx_features.groupby(by=['icd9_code'], as_index=False)['subject_id'].unique()
+    # Count subject_id for each icd9_code -> This will be a count of patient with specific features
+    subject_counts['unique_patient_count'] = [len(x) for x in subject_counts['subject_id']]
+    # Apply the formula IC(featureA) = -log2(count(patient with featureA) / all patient count)
+    subject_counts['icd9_code_ic'] = -1 * np.log2(subject_counts['unique_patient_count']/all_patients_count)
+
+    # Merge the dx_features with the subject_counts
+    icd9_ic = pd.merge(dx_features, subject_counts, on=['icd9_code'], how='inner')
+    # We want a dataframe contain distinct icd9_code, so we need to drop the duplicate data
+    icd9_ic.drop_duplicates(subset=['icd9_code'], inplace=True)
+    # Formulate the final dataframe with required columns
+    icd9_ic = icd9_ic[['icd9_code', 'icd9_code_ic']]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -133,6 +158,12 @@ def filter_ic(dx_features: pd.DataFrame, icd9_ic: pd.DataFrame) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Merge dx_features and icd9_ic
+    dx_filtered = pd.merge(dx_features, icd9_ic, on=['icd9_code'], how='inner')
+    # Filter dx_filtered dataframe based on the condition given
+    dx_filtered = dx_filtered[(dx_filtered["icd9_code_ic"] >= 4) & (dx_filtered["icd9_code_ic"] <= 9)]
+    # Drop unnecessary column
+    dx_filtered.drop(['icd9_code_ic'], axis=1, inplace=True)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -186,6 +217,24 @@ def get_diagnosis_features(dx_selected: pd.DataFrame) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    patient_diagnosis_features = dx_selected.copy()
+    patient_diagnosis_features["diagnose_time"] = pd.to_datetime(patient_diagnosis_features["dischtime"],format="%Y-%m-%d %H:%M:%S", utc=True)
+    patient_diagnosis_features['RECENT'] = ((patient_diagnosis_features['index_time'] - patient_diagnosis_features['diagnose_time']) <= timedelta(days=30.44*6)).astype(int)
+    patient_diagnosis_features['PRIOR'] = ((patient_diagnosis_features['index_time'] - patient_diagnosis_features['diagnose_time']) > timedelta(days=30.44*6)).astype(int)
+
+    patient_diagnosis_features = patient_diagnosis_features[["subject_id", "icd9_code", "RECENT", "PRIOR"]]
+    patient_diagnosis_features = patient_diagnosis_features.groupby(by=["subject_id", "icd9_code"], as_index=False).sum()
+
+    patient_diagnosis_features = pd.pivot_table(patient_diagnosis_features,
+                                                index='subject_id',
+                                                values = ['RECENT', 'PRIOR'],
+                                                columns = 'icd9_code',
+                                                aggfunc="count"
+                                                )
+
+    patient_diagnosis_features.columns = ["_".join(x) for x in patient_diagnosis_features.columns]
+    patient_diagnosis_features.reset_index(inplace=True)
+
     
     # ==================== YOUR CODE HERE ====================
     

@@ -54,6 +54,9 @@ def filter_vitals(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    vitals_to_keep_df = vitals[vitals['vital_id'].isin(vitals_to_keep)]
+    filtered_vitals = pd.merge(vitals_to_keep_df, shock_labels, on=['subject_id', 'hadm_id', 'icustay_id'])
+    filtered_vitals = filtered_vitals[filtered_vitals['charttime'] < filtered_vitals['index_time']]
     
     # ==================== YOUR CODE HERE ====================
     
@@ -91,7 +94,12 @@ def get_latest_hr(heart_rates: pd.DataFrame) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
+    latest_hr_df = heart_rates.copy()
+    latest_hr_df = latest_hr_df.sort_values('charttime')
+    latest_hr_df = latest_hr_df.groupby(["subject_id"]).tail(1)
+
+    latest_hr_df = latest_hr_df[["subject_id", "charttime", "valuenum", "index_time", "label"]]
+    latest_hr_df.rename(columns={"valuenum": "latest_heart_rate"}, inplace=True)
     # ==================== YOUR CODE HERE ====================
     
 
@@ -158,8 +166,18 @@ def get_time_weighted_hr(heart_rates: pd.DataFrame) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    result = heart_rates.copy()
+    result['dt'] = (result['charttime'] - result['index_time'])/ pd.Timedelta(hours=1)
+    result['weight'] = np.exp(-1*abs(result['dt']) - 1)
+    result['weighted_hr'] = result['weight']*result['valuenum']
+    result = result[['subject_id', 'dt', 'weight', 'weighted_hr', 'valuenum']]
+    subject_group = result.groupby('subject_id', as_index=False).sum()
+    subject_group['time_wt_avg'] = subject_group['weighted_hr'] / subject_group['weight']
+    subject_group = subject_group[['subject_id', 'time_wt_avg']]
+
+    subject_group = subject_group.dropna()
     
     # ==================== YOUR CODE HERE ====================
     
 
-    return result
+    return subject_group

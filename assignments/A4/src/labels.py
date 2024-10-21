@@ -144,6 +144,7 @@ def get_index_time(admissions: pd.DataFrame) -> None:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Calculate the index time by adding 12 hours to the admittime
     admissions["index_time"] = admissions["admittime"] + pd.Timedelta(hours=12)
     
     # ==================== YOUR CODE HERE ====================
@@ -195,27 +196,31 @@ def get_shock_labels(merged_cohort: pd.DataFrame) -> pd.DataFrame:
 
     # ==================== YOUR CODE HERE ====================
     
-    # TODO: Implement
+    # Create a copy of the input DataFrame
     label_df = merged_cohort.copy()
 
     # Admissions where the earliest time of septic shock occurs prior to fifteen hours after admission are removed from the study.
     excludes = label_df[(label_df['septic_shock']) & ((label_df["relative_charttime"]) < 15)]['hadm_id'].unique()
     label_df = label_df[~label_df['hadm_id'].isin(excludes)]
-    pos_hadm = check_positive(label_df)
-    neg_hadm = check_negative(label_df)
+
+    # Calculate the hadm for the positive and negative label
+    positive_hadm = check_positive(label_df)
+    negative_hadm = check_negative(label_df)
 
     # Labeled the hadm_id belongs to pos_hadm As True and assigned the value to column 'label'
-    label_df.loc[label_df['hadm_id'].isin(pos_hadm), 'label'] = True
+    label_df.loc[label_df['hadm_id'].isin(positive_hadm), 'label'] = True
     # Labeled the hadm_id belongs to neg_hadm As False and assigned the value to column 'label'
-    label_df.loc[label_df['hadm_id'].isin(neg_hadm), 'label'] = False
+    label_df.loc[label_df['hadm_id'].isin(negative_hadm), 'label'] = False
 
     # Sort the dataframe by 'subject_id' (ASC) and 'admittime' (DESC).
     # This will result the latest admittime will be 1st record of the group
     label_df = label_df.sort_values(by=['subject_id', 'admittime'], ascending=[True, False])
-    # We drop all records except the first one
+
+    # We drop all records for each subject_id except the first one
     label_df = label_df.drop_duplicates(subset='subject_id', keep='first')
 
-    label_df = label_df[["subject_id", "hadm_id", "admittime", "dischtime", "index_time", "label", "icustay_id"]]
+    # Update label_df and only contains the fields needed for return
+    label_df = label_df[["subject_id", "hadm_id", "icustay_id", "admittime", "dischtime", "index_time", "label"]]
 
     # ==================== YOUR CODE HERE ====================
     

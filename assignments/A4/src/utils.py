@@ -94,6 +94,16 @@ def join_and_clean_data(diagnosis_features, note_concept_features, heart_rate_fe
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    X = pd.merge(diagnosis_features, note_concept_features, on='subject_id', how='outer')
+    X = X.fillna(0)
+    X = X.merge(heart_rate_features, on='subject_id', how='outer')
+    heart_rate_features_cols = heart_rate_features.columns
+    heart_rate_features_cols = [x for x in heart_rate_features_cols if x!='subject_id']
+    X[heart_rate_features_cols] = X[heart_rate_features_cols].fillna(X[heart_rate_features_cols].mean())
+    other_cols = [x for x in X.columns if x not in heart_rate_features.columns]
+    X[other_cols] = X[other_cols].fillna(0)
+
+    X.sort_values('subject_id', inplace=True)
     
     # ==================== YOUR CODE HERE ====================
     

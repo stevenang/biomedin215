@@ -50,6 +50,16 @@ def show_diagnosis_hist(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    subject_counts = dx_features.groupby("icd9_code", as_index=False)["subject_id"].unique()
+    subject_counts["unique_patient_id_count"] = [len(x) for x in subject_counts["subject_id"]]
+
+    sns.histplot(subject_counts, x="unique_patient_id_count", stat="count")
+    plt.xlabel("Patient Count")
+    plt.ylabel("Diagnosis Count")
+    plt.tick_params(labelsize=15)
+
+    if output_file:
+        plt.savefig(output_file)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -88,6 +98,16 @@ def show_hr_plot(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    latest_hr_df_pos = latest_hr_df[latest_hr_df['label']==1]
+    latest_hr_df_neg = latest_hr_df[latest_hr_df['label']==0]
+    sns.kdeplot(data=latest_hr_df_pos, x='latest_heart_rate', color='blue')
+    sns.kdeplot(data=latest_hr_df_neg, x='latest_heart_rate', color='orange')
+    plt.ylabel('Density')
+    plt.xlabel('Heart Rate (bpm)')
+    plt.legend(labels=['Shock label = 1','Shock label = 0'])
+
+    if output_file:
+        plt.savefig(output_file)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -127,6 +147,18 @@ def show_hr_time_plot(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    latest_hr_df_graph = latest_hr_df.copy()
+    latest_hr_df_graph['time_diff'] = (latest_hr_df_graph['charttime'] - latest_hr_df_graph['index_time'])/ pd.Timedelta(hours=1)
+    latest_hr_df_pos = latest_hr_df_graph[latest_hr_df_graph['label']==1]
+    latest_hr_df_neg = latest_hr_df_graph[latest_hr_df_graph['label']==0]
+    sns.kdeplot(data=latest_hr_df_pos, x='time_diff', color='blue')
+    sns.kdeplot(data=latest_hr_df_neg, x='time_diff', color='orange')
+    plt.ylabel('Density')
+    plt.xlabel('Time Difference: Chart Time - Index Time (hours)')
+    plt.legend(labels=['Shock label = 1','Shock label = 0'])
+
+    if output_file:
+        plt.savefig(output_file)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -171,6 +203,13 @@ def show_hr_scatter(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    merged = pd.merge(latest_hr_df, time_weighted_hr_df, on='subject_id', how='inner')
+    sns.scatterplot(y=merged['latest_heart_rate'], x=merged['time_wt_avg'])
+    plt.ylabel('Time Weighted Avg Heart Rate (bpm)')
+    plt.xlabel('Latest Heart Rate (bpm)')
+
+    if output_file:
+        plt.savefig(output_file)
     
     # ==================== YOUR CODE HERE ====================
     
