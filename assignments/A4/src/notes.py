@@ -110,12 +110,11 @@ def merge_snomed(
     snomed_ct_str_cui_copy = snomed_ct_str_cui.copy()
 
     # Perform inner merge
-    snomed_ct_concept_string = snomed_ct_isaclosure.merge(snomed_ct_str_cui, how='inner', left_on='descendant', right_on='CUI')
+    snomed_ct_concept_string = snomed_ct_isaclosure_copy.merge(snomed_ct_str_cui_copy, how='inner', left_on='descendant', right_on='CUI')
 
     # Data cleanup
     snomed_ct_concept_string = snomed_ct_concept_string[['ancestor','str']].rename(columns={'ancestor':'CUI', 'str':'term'})
     # ==================== YOUR CODE HERE ====================
-    
 
     # Return the dataframe
     return snomed_ct_concept_string
@@ -159,7 +158,7 @@ def get_cui_list(
     # TODO: Implement
     term_list = snomed_ct_concept_string[snomed_ct_concept_string["CUI"] == cui]['term'].unique()
     term_list = [x for x in term_list if len(x) <= character_limit]
-    term_list.sort(key=len)
+    term_list.sort(key=lambda x: (len(x), x))
     
     # ==================== YOUR CODE HERE ====================
     
@@ -286,15 +285,46 @@ def normalize_terms(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    '''
     result_df = nx_terms.copy()
-    term_cols = [x for x in result_df.columns if x not in ['subject_id', 'chartdate']]
+    term_cols = [x for x in result_df.columns if x not in ['row_id',
+                                                           'hadm_id',
+                                                           'chartdate',
+                                                           'charttime',
+                                                           'storetime',
+                                                           'category',
+                                                           'description',
+                                                           'cgid',
+                                                           'iserror',
+                                                           'note_text',
+                                                           'subject_id']]
+    display(result_df)
     result_df = result_df.melt(id_vars=['subject_id', 'chartdate'], value_vars=term_cols,
-                               var_name='term', value_name='contains', ignore_index=True)
-    result_df = result_df[result_df['contains']==1] ## filter for those that were
+                               var_name='term', value_name='contains')
+    display(result_df)
 
-    result_df = result_df.merge(snomed_ct_concept_string, on='term', how='inner')
+    result_df = result_df[result_df['contains']==1] ## filter for those that were
+    display(result_df)
+    result_df = result_df.merge(snomed_ct_concept_string, on='term', how='left')
     result_df = result_df[['subject_id', 'chartdate', 'CUI']]
-    
+    display(result_df)
+    '''
+    display(snomed_ct_concept_string)
+    temp_df = nx_terms.copy()
+    temp_df = temp_df.melt(id_vars=['subject_id', 'chartdate'],
+                           value_vars= ['ekc', 'ipv', 'mma', 'mve', 'ngu', 'pic', 'sbe', 'sty',
+                                        'anug', 'boil', 'boop', 'cidp', 'mcls', 'mlns', 'noma', 'stye', 'zona',
+                                        'croup', 'felon', 'mewds', 'mumps', 'ozena', 'polio', 'sowda', 'apmppe',
+                                        'eczema', 'harara', 'iritis', 'mycide', 'oleoma', 'otitis', 'ozaena',
+                                        'pigbel', 'pyemia', 'quinsy', 'sepsis', 't.i.n.', 'zoster', 'abscess',
+                                        'ameboma', 'arc eye', 'cecitis', 'chagoma', 'colitis', 'coxitis',
+                                        'ecthyma', 'empyema', 'gangosa', 'ileitis', 'mucitis'])
+    temp_df = temp_df[temp_df['value'] == True]console
+    #temp_df = temp_df.rename(columns={'variable':'str'})
+    #temp_df = temp_df.merge(snomed_ct_concept_string, on='str', how='left')
+    #temp_df = temp_df.rename(columns={'CUI':'concept'})
+
+
     # ==================== YOUR CODE HERE ====================
     
 
