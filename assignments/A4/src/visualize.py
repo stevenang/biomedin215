@@ -98,13 +98,16 @@ def show_hr_plot(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    latest_hr_df_pos = latest_hr_df[latest_hr_df['label']==1]
-    latest_hr_df_neg = latest_hr_df[latest_hr_df['label']==0]
-    sns.kdeplot(data=latest_hr_df_pos, x='latest_heart_rate', color='blue')
-    sns.kdeplot(data=latest_hr_df_neg, x='latest_heart_rate', color='orange')
-    plt.ylabel('Density')
+    latest_hr_df_pos = latest_hr_df[latest_hr_df['label']==True]
+    latest_hr_df_neg = latest_hr_df[latest_hr_df['label']==False]
+    sns.kdeplot(data=latest_hr_df_pos, x='latest_heart_rate', color='blue', fill=True, alpha=0.5, label='Shock')
+    sns.kdeplot(data=latest_hr_df_neg, x='latest_heart_rate', color='orange', fill=True, alpha=0.5, label='No Shock')
+
+    # Customize the plot
+    plt.title('Density Plot of Latest Heart Rate Measurements by Shock Label')
     plt.xlabel('Heart Rate (bpm)')
-    plt.legend(labels=['Shock label = 1','Shock label = 0'])
+    plt.ylabel('Density')
+    plt.legend(title='Shock Label', loc='upper right', frameon=True)
 
     if output_file:
         plt.savefig(output_file)
@@ -149,13 +152,15 @@ def show_hr_time_plot(
     # TODO: Implement
     latest_hr_df_graph = latest_hr_df.copy()
     latest_hr_df_graph['time_diff'] = (latest_hr_df_graph['charttime'] - latest_hr_df_graph['index_time'])/ pd.Timedelta(hours=1)
-    latest_hr_df_pos = latest_hr_df_graph[latest_hr_df_graph['label']==1]
-    latest_hr_df_neg = latest_hr_df_graph[latest_hr_df_graph['label']==0]
-    sns.kdeplot(data=latest_hr_df_pos, x='time_diff', color='blue')
-    sns.kdeplot(data=latest_hr_df_neg, x='time_diff', color='orange')
+    latest_hr_df_pos = latest_hr_df_graph[latest_hr_df_graph['label']==True]
+    latest_hr_df_neg = latest_hr_df_graph[latest_hr_df_graph['label']==False]
+    sns.kdeplot(data=latest_hr_df_pos, x='time_diff', color='blue', fill=True, alpha=0.5, label='Shock')
+    sns.kdeplot(data=latest_hr_df_neg, x='time_diff', color='orange', fill=True, alpha=0.5, label='No Shock')
+
+    plt.title('Density Plot of Latest Heart Rate Time Measurements by Shock Label')
     plt.ylabel('Density')
     plt.xlabel('Time Difference: Chart Time - Index Time (hours)')
-    plt.legend(labels=['Shock label = 1','Shock label = 0'])
+    plt.legend(title='Shock Label', loc='upper right', frameon=True)
 
     if output_file:
         plt.savefig(output_file)

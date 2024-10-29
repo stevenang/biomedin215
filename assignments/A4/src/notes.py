@@ -285,7 +285,6 @@ def normalize_terms(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    '''
     result_df = nx_terms.copy()
     term_cols = [x for x in result_df.columns if x not in ['row_id',
                                                            'hadm_id',
@@ -308,21 +307,6 @@ def normalize_terms(
     result_df = result_df.merge(snomed_ct_concept_string, on='term', how='left')
     result_df = result_df[['subject_id', 'chartdate', 'CUI']]
     display(result_df)
-    '''
-    display(snomed_ct_concept_string)
-    temp_df = nx_terms.copy()
-    temp_df = temp_df.melt(id_vars=['subject_id', 'chartdate'],
-                           value_vars= ['ekc', 'ipv', 'mma', 'mve', 'ngu', 'pic', 'sbe', 'sty',
-                                        'anug', 'boil', 'boop', 'cidp', 'mcls', 'mlns', 'noma', 'stye', 'zona',
-                                        'croup', 'felon', 'mewds', 'mumps', 'ozena', 'polio', 'sowda', 'apmppe',
-                                        'eczema', 'harara', 'iritis', 'mycide', 'oleoma', 'otitis', 'ozaena',
-                                        'pigbel', 'pyemia', 'quinsy', 'sepsis', 't.i.n.', 'zoster', 'abscess',
-                                        'ameboma', 'arc eye', 'cecitis', 'chagoma', 'colitis', 'coxitis',
-                                        'ecthyma', 'empyema', 'gangosa', 'ileitis', 'mucitis'])
-    temp_df = temp_df[temp_df['value'] == True]console
-    #temp_df = temp_df.rename(columns={'variable':'str'})
-    #temp_df = temp_df.merge(snomed_ct_concept_string, on='str', how='left')
-    #temp_df = temp_df.rename(columns={'CUI':'concept'})
 
 
     # ==================== YOUR CODE HERE ====================
