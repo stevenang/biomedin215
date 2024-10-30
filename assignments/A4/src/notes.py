@@ -297,16 +297,11 @@ def normalize_terms(
                                                            'iserror',
                                                            'note_text',
                                                            'subject_id']]
-    display(result_df)
     result_df = result_df.melt(id_vars=['subject_id', 'chartdate'], value_vars=term_cols,
                                var_name='term', value_name='contains')
-    display(result_df)
-
-    result_df = result_df[result_df['contains']==1] ## filter for those that were
-    display(result_df)
+    result_df = result_df[result_df['contains']==1]
     result_df = result_df.merge(snomed_ct_concept_string, on='term', how='left')
     result_df = result_df[['subject_id', 'chartdate', 'CUI']]
-    display(result_df)
 
 
     # ==================== YOUR CODE HERE ====================
