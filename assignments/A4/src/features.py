@@ -217,9 +217,61 @@ def get_diagnosis_features(dx_selected: pd.DataFrame) -> pd.DataFrame:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    days_6months = 30.44*6
+    dx_classified = dx_selected.copy()
+
+    # Create a new column 'time_bin' to classify RECENT and PRIOR
+    dx_classified['time_bin'] = dx_classified.apply(
+        lambda row: 'RECENT' if (row['dischtime'] >= row['index_time'] - pd.Timedelta(days=30.44 * 6)) else 'PRIOR', axis=1)
+
+    # Count occurrences of each diagnosis for each patient
+    diagnosis_counts = dx_classified.groupby(['subject_id', 'icd9_code', 'time_bin']).size().reset_index(name='count')
+
+    # Pivot the DataFrame to create the desired format
+    diagnosis_pivot = diagnosis_counts.pivot_table(
+        index='subject_id',
+        columns=['time_bin', 'icd9_code'],
+        values='count',
+        fill_value=0)
+
+    # Flatten the MultiIndex columns
+    diagnosis_pivot.columns = [f"{time_bin}_{icd9_code}" for time_bin, icd9_code in diagnosis_pivot.columns]
+
+    # Reset index to turn the subject_id back into a column
+    patient_diagnosis_features = diagnosis_pivot.reset_index()
+    '''
+    dx_selected['RECENT'] = ((dx_selected['index_time'] - dx_selected['dischtime']) <= timedelta(days=days_6months)).astype(int)
+    dx_selected['PRIOR'] = ((dx_selected['index_time'] - dx_selected['dischtime']) > timedelta(days=days_6months)).astype(int)
+
+    dx_selected = dx_selected[['subject_id', 'icd9_code', 'RECENT', 'PRIOR']]
+    patient_diagnosis_features = dx_selected.groupby(['subject_id', 'icd9_code'], as_index=False).sum()
+    # patient_diagnosis_features = patient_diagnosis_features[['subject_id', 'icd9_code', 'RECENT', 'PRIOR']]
+    # patient_diagnosis_features.rename(columns={'RECENT':'count'}, inplace=True)
+
+    patient_diagnosis_features = pd.pivot_table(patient_diagnosis_features,
+                                                index='subject_id',
+                                                values = ['RECENT', 'PRIOR'],
+                                                columns = 'icd9_code',
+                                                aggfunc="count"
+                                                )
+
+    patient_diagnosis_features.columns = ["_".join(x) for x in patient_diagnosis_features.columns]
+    patient_diagnosis_features.reset_index(inplace=True)
+    '''
+    '''
     patient_diagnosis_features = dx_selected.copy()
     patient_diagnosis_features["diagnose_time"] = pd.to_datetime(patient_diagnosis_features["dischtime"],format="%Y-%m-%d %H:%M:%S", utc=True)
-    patient_diagnosis_features['RECENT'] = ((patient_diagnosis_features['index_time'] - patient_diagnosis_features['diagnose_time']) <= timedelta(days=30.44*6)).astype(int)
+    patient_diagnosis_features['RECENT_TIME'] = patient_diagnosis_features['index_time'] + timedelta(days=30.44*6)
+    print(patient_diagnosis_features['RECENT_TIME'])
+    patient_diagnosis_features['RECENT'] = (
+            (patient_diagnosis_features['diagnose_time'] >= patient_diagnosis_features['index_time']) &
+            (patient_diagnosis_features['diagnose_time'] <= patient_diagnosis_features['RECENT_TIME'])
+    )
+    # Method 1: Using sum() - since True=1 and False=0
+    count_recent = patient_diagnosis_features['RECENT'].sum()
+    print(f"Number of RECENT=True: {count_recent}")
+
+    #patient_diagnosis_features['RECENT'] = ((patient_diagnosis_features['index_time'] <= patient_diagnosis_features['diagnose_time']) <= timedelta(days=30.44*6)).astype(int)
     patient_diagnosis_features['PRIOR'] = ((patient_diagnosis_features['index_time'] - patient_diagnosis_features['diagnose_time']) > timedelta(days=30.44*6)).astype(int)
 
     patient_diagnosis_features = patient_diagnosis_features[["subject_id", "icd9_code", "RECENT", "PRIOR"]]
@@ -234,6 +286,7 @@ def get_diagnosis_features(dx_selected: pd.DataFrame) -> pd.DataFrame:
 
     patient_diagnosis_features.columns = ["_".join(x) for x in patient_diagnosis_features.columns]
     patient_diagnosis_features.reset_index(inplace=True)
+    '''
 
     
     # ==================== YOUR CODE HERE ====================
