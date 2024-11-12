@@ -65,13 +65,18 @@ def split_labels_and_features(
     """
 
     # Overwrite these return variables in your implementation
-    features = None
+    features = patient_feature_matrix.copy()
     labels = None
 
 
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    features.replace(column_value_map, inplace=True)
+    labels = features[['subject_id', 'death_in_stay']]
+    labels.set_index('subject_id', inplace=True)
+    features.drop('death_in_stay', axis=1, inplace=True)
+    features.set_index('subject_id', inplace=True)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -117,12 +122,39 @@ def feature_variance_threshold(
     """
 
     # Overwrite this return variable in your implementation
-    filtered_features = None
+    filtered_features = features.copy()
 
 
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    def shall_we_keep_the_feature(df, column_name):
+        # Check if the feature (column) has only one unique value
+        if (len(df[column_name].unique()) == 1):
+            return None
+
+        # Get top 2 nlargest value of the given feature
+        n_largest_list = df[column_name].value_counts().nlargest(2).values.tolist()
+        most_common_count, second_common_count = n_largest_list
+        # Get the unique value count we have in the feature
+        unique_value_count = len(df[column_name].unique())
+        # Get the total rows we have in the feature
+        total_rows = df[column_name].shape[0]
+
+        # If the ratio of the most common value to the second most common value is
+        # LESS THAN freq_cut, then the feature should be KEPT
+        if most_common_count/second_common_count < freq_cut:
+            return column_name
+
+        # If the (number of unique values) / (total number of rows) is
+        # GREATER than unique_cut, then the feature should be KEPT
+        if unique_value_count / total_rows > unique_cut:
+            return column_name
+
+        return None
+
+    selected_columns = [column for column in filtered_features.columns if shall_we_keep_the_feature(filtered_features, column) != None]
+    filtered_features = filtered_features[selected_columns]
     
     # ==================== YOUR CODE HERE ====================
     

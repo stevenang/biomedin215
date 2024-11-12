@@ -59,6 +59,20 @@ def plot_logit_scores(propensity_scores: pd.DataFrame, output_file: str) -> None
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    propensity_scores_copy = propensity_scores.copy()
+    propensity_scores_copy['logit'] = propensity_scores_copy['propensity_score'].apply(lambda x: safe_logit(x))
+
+    propensity_drop0 = propensity_scores_copy[propensity_scores_copy['oxy_drop']==0]
+    propensity_drop1 = propensity_scores_copy[propensity_scores_copy['oxy_drop']==1]
+    sns.kdeplot(data=propensity_drop0, x='logit', color='blue', common_norm=False, fill=True, alpha=0.5, linewidth=0)
+    sns.kdeplot(data=propensity_drop1, x='logit', color='orange', common_norm=False, fill=True, alpha=0.5, linewidth=0)
+    plt.ylabel('Density')
+    plt.xlabel('logit(P)')
+    plt.title('Density Plot of logit(P)')
+    plt.legend(labels=['oxy_drop = 0','oxy_drop = 1'])
+
+    if output_file:
+        plt.savefig(output_file)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -139,6 +153,48 @@ def caliper_match(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Make a copy of the input dataframe to avoid modifying the original
+    propensity_scores_cp = propensity_scores.copy()
+    # Calculate logit scale using the safe_logit function
+    propensity_scores_cp['logit'] = propensity_scores_cp['propensity_score'].apply(lambda x: safe_logit(x))
+
+    # Calculate the caliper threshold as (standard deviation of logit scores * caliper parameter)
+    caliper_thres = propensity_scores_cp['logit'].std()*caliper
+
+    # Split the data into two groups:
+    # stable_df: control group (oxy_drop = 0)
+    # oxy_drop_df: treatment group (oxy_drop = 1)
+    stable_df = propensity_scores_cp[propensity_scores_cp['oxy_drop']==0]
+    oxy_drop_df = propensity_scores_cp[propensity_scores_cp['oxy_drop']==1]
+    print(f"caliper_thres: {caliper_thres}")
+
+    oxy_drop_ids = oxy_drop_df.index.unique().tolist()
+    stable_ids = stable_df.index.unique().tolist()
+
+    for patient_drop1 in oxy_drop_ids:
+        # Get the logit score for the current treatment patient
+        target_logit = oxy_drop_df.loc[patient_drop1, 'logit']
+        # Filter control group to only include patients still available for matching
+        matched_drop0 = stable_df[stable_df.index.isin(stable_ids)]
+        # Calculate absolute difference in logit scores between current treatment patient
+        # and all available control patients
+        matched_drop0['diff_logit'] = (abs(stable_df['logit']-target_logit))
+
+        # Check if there are any potential matches within the caliper threshold
+        if (matched_drop0['diff_logit']<=caliper_thres).sum() == 0:
+            # If no matches found within threshold, skip to next treatment patient
+            continue
+        else:
+            # Sort potential matches by difference in logit scores (ascending)
+            # to find the closest match
+            matched_drop0 = matched_drop0.sort_values('diff_logit', ascending=True)
+            # Get the ID of the closest match (first row after sorting)
+            matched_drop0_id = matched_drop0.index.values[0]
+            # Add the matched pair to results list (treatment_id, control_id)
+            matches.append((patient_drop1, matched_drop0_id))
+            # Remove the matched control patient from the available pool
+            stable_ids.remove(matched_drop0_id)
+
     
     # ==================== YOUR CODE HERE ====================
     

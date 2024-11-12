@@ -81,6 +81,19 @@ def run_logistic_regression(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    if selected_features is None:
+        features = filtered_features
+    else:
+        features = filtered_features[selected_features]
+
+    formula = create_formula_string(labels.columns[0], features)
+
+    df_data = pd.concat([labels, features], axis=1).reset_index()
+
+    model = smf.glm(formula=formula, data=df_data, family=sm.families.Binomial())
+
+    result = model.fit()
+    print(result)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -120,6 +133,7 @@ def create_formula_string(outcome_col: str, feature_col_list: List[str]) -> str:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    formula_string = f"{outcome_col} ~ " + ' + '.join(feature_col_list)
     
     # ==================== YOUR CODE HERE ====================
     

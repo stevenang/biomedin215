@@ -66,7 +66,7 @@ def multi_ttest(
     """
 
     # Overwrite these variables with your implementation
-    ttest_results = pd.DataFrame(columns=["column_name", "p_value", "reject_null"])
+    ttest_results = None
 
     sig_columns = []
 
@@ -74,6 +74,57 @@ def multi_ttest(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Make copies to avoid modifying original dataframes
+    features_copy = filtered_features.copy().reset_index()
+    labels_copy = label_df.copy().reset_index()
+
+    # Merge features with labels
+    merged_df = pd.merge(
+        features_copy,
+        labels_copy,
+        on='subject_id',
+        how='inner'
+    )
+
+    # Get columns that contain the substring
+    feature_columns = [col for col in filtered_features.columns
+                       if column_substring in col]
+
+    # Calculate Bonferroni corrected alpha
+    num_columns = len(feature_columns)
+    bonferroni_alpha = calc_bonferroni(alpha, num_columns)
+
+    # Initialize lists to store results
+    results = []
+
+    # Perform t-test for each column
+    for column in feature_columns:
+        # Split data into groups
+        survived_values = merged_df[merged_df['death_in_stay'] == 0][column]
+        deceased_values = merged_df[merged_df['death_in_stay'] == 1][column]
+
+        # Perform t-test
+        _, p_value = ttest_ind(survived_values, deceased_values)
+
+        # Check if null hypothesis should be rejected
+        reject_null = p_value < bonferroni_alpha
+
+        # Store results
+        results.append({
+            'column_name': column,
+            'p_value': p_value,
+            'reject_null': reject_null
+        })
+
+        # If significant, add to significant columns list
+        if reject_null:
+            sig_columns.append(column)
+
+    # Create results DataFrame
+    ttest_results = pd.DataFrame(results)
+
+    # Sort results by p-value
+    ttest_results = ttest_results.sort_values('p_value')
     
     # ==================== YOUR CODE HERE ====================
     
@@ -107,6 +158,7 @@ def calc_bonferroni(original_alpha: float = 0.05, number_of_test: int = 1) -> fl
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    bonferroni_alpha = original_alpha / number_of_test
     
     # ==================== YOUR CODE HERE ====================
     
