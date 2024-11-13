@@ -62,6 +62,17 @@ def split_data(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    n_test = round(test_fraction * features.shape[0])
+    indices = features.index.tolist()
+    np.random.seed(random_state)
+    indices = np.random.permutation(indices)
+    test_indices = indices[:n_test]
+    train_indices = indices[n_test:]
+
+    X_test = features.loc[test_indices]
+    X_train = features.loc[train_indices]
+    Y_test = labels.loc[test_indices]
+    Y_train = labels.loc[train_indices]
     
     # ==================== YOUR CODE HERE ====================
     

@@ -48,6 +48,9 @@ def logistic_regression(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    # Inverse of regularization strength
+    C = 1 / lambda_
+    log_reg_model = LogisticRegression(random_state=random_state, max_iter=max_iter, penalty='l2', C=C, solver='lbfgs').fit(X_train, Y_train)
     
     # ==================== YOUR CODE HERE ====================
     
