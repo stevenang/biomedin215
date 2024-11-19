@@ -50,7 +50,14 @@ def logistic_regression(
     # TODO: Implement
     # Inverse of regularization strength
     C = 1 / lambda_
-    log_reg_model = LogisticRegression(random_state=random_state, max_iter=max_iter, penalty='l2', C=C, solver='lbfgs').fit(X_train, Y_train)
+    # Based on documentation, solver `lbfgs` only supports penalty `l2` or `None`
+    log_reg_model = (LogisticRegression(random_state=random_state,
+                                       max_iter=max_iter,
+                                       penalty='l2',
+                                       C=C,
+                                       solver='lbfgs',
+                                       n_jobs=1)
+                     .fit(X_train, Y_train))
     
     # ==================== YOUR CODE HERE ====================
     
@@ -97,6 +104,7 @@ def gradient_boosted_tree(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    grad_boost_model = GradientBoostingClassifier(n_estimators=n_estimators, random_state=random_state).fit(X_train, Y_train)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -132,6 +140,7 @@ def get_log_reg_coefficients(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    coefficients = log_reg.coef_
     
     # ==================== YOUR CODE HERE ====================
     
@@ -167,6 +176,7 @@ def get_tree_feature_importance(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    feature_importances = gbt.feature_importances_
     
     # ==================== YOUR CODE HERE ====================
     
@@ -240,6 +250,13 @@ def get_top_features(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    abs_values = abs(values.flatten())
+
+    df_features_vals = pd.DataFrame(data={'feature':features.columns.tolist(),
+                                          value_type:values.flatten(),
+                                          f'abs_{value_type}': abs_values})
+    df_features = pd.merge(df_features_vals, feature_descriptions[['feature', 'description', 'feature_type']], on='feature', how='left')
+    top_k_features = df_features.sort_values(f'abs_{value_type}', ascending=False).head(k)
     
     # ==================== YOUR CODE HERE ====================
     

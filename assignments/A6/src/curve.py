@@ -62,10 +62,18 @@ def calc_roc_curve(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    fprs, tprs = [], []
+    thresholds = np.linspace(0,1,num=1000)
+
+    for threshold in thresholds:
+        test_predicted_at_threshold = np.where(test_probabilites >= threshold, 1, 0)
+        con_mat = confusion_matrix(test_labels, test_predicted_at_threshold)
+        fprs.append(1-specificity(con_mat))
+        tprs.append(sensitivity(con_mat))
     
     # ==================== YOUR CODE HERE ====================
     
-    return fprs, tprs
+    return np.array(fprs), np.array(tprs)
 
 
 def display_roc_curve(
@@ -104,6 +112,15 @@ def display_roc_curve(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    for fpr_tpr_pair,model_name in zip(fpr_tpr_list, model_name_list):
+        plt.plot(fpr_tpr_pair[0], fpr_tpr_pair[1], label=model_name)
+    plt.plot([0, 1], [0, 1], label='random performance')
+    plt.xlabel('FPR')
+    plt.ylabel('TPR')
+    plt.legend()
+
+    if filename:
+        plt.savefig(filename)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -148,11 +165,21 @@ def calc_precision_recall_curve(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
-    # ==================== YOUR CODE HERE ====================
-    
+    precs, recalls = [], []
+    thresholds = np.linspace(0,1,num=1000)
 
-    return precs, recalls
+    for threshold in thresholds:
+        test_predicted_at_threshold = np.where(test_probabilites >= threshold, 1, 0)
+        con_mat = confusion_matrix(test_labels, test_predicted_at_threshold)
+        precs.append(precision(con_mat))
+        recalls.append(sensitivity(con_mat))
+
+
+    # ==================== YOUR CODE HERE ====================
+
+
+    return np.array(precs), np.array(recalls)
+
 
 
 def display_precision_recall_curve(
@@ -189,6 +216,14 @@ def display_precision_recall_curve(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    for p_r_pair,model_name in zip(p_r_list, model_name_list): #(prec, recall)
+        plt.plot(p_r_pair[1], p_r_pair[0], label=model_name)
+    plt.xlabel('Recall / Sensitivity')
+    plt.ylabel('Precision')
+    plt.legend()
+
+    if filename:
+        plt.savefig(filename)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -230,6 +265,14 @@ def display_calibration_plot(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    prob_true, prob_pred = calibration_curve(test_labels, test_probabilities, n_bins=10, strategy='uniform')
+    plt.plot(prob_pred, prob_true)
+    plt.plot([0, 1], [0, 1])
+    plt.xlabel('Predicted Probability')
+    plt.ylabel('Fraction of positives')
+
+    if filename:
+        plt.savefig(filename)
     
     # ==================== YOUR CODE HERE ====================
     

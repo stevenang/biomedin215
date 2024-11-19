@@ -41,6 +41,10 @@ def display_partial_dependence(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    PartialDependenceDisplay.from_estimator(model, X=features, features=feature_names)
+
+    if filename:
+        plt.savefig(filename)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -81,6 +85,11 @@ def display_age_distribution(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    df_data = features[['age_in_days']].merge(labels, on='subject_id', how='inner')
+    sns.histplot(data=df_data, x="age_in_days", hue="death_in_stay", multiple="dodge")
+
+    if filename:
+        plt.savefig(filename)
     
     # ==================== YOUR CODE HERE ====================
     

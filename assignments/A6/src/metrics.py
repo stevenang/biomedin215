@@ -41,6 +41,7 @@ def accuracy(test_labels: np.ndarray, test_predictions: np.ndarray) -> float:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    print((test_labels == test_predictions).sum(), len(test_labels))
     correct_count = (test_labels == test_predictions).sum()
     acc = correct_count / len(test_labels)
     
@@ -77,11 +78,14 @@ def confusion_matrix(
 
     # Overwrite this variable in your implementation
     con_mat = np.zeros((2, 2))
-
+    classes = [0,1]
 
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    for i in range(len(classes)):
+        for j in range(len(classes)):
+            con_mat[i, j] = np.sum((test_labels == classes[i]) & (test_predictions == classes[j]))
     
     # ==================== YOUR CODE HERE ====================
     
@@ -116,8 +120,14 @@ def sensitivity(con_mat: np.ndarray) -> float:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
-    # ==================== YOUR CODE HERE ====================
+    true_positive = con_mat[1,1]
+    false_negative = con_mat[1,0]
+    if true_positive+false_negative == 0:
+        sens = 0
+    else:
+        sens = true_positive / (true_positive+false_negative)
+
+        # ==================== YOUR CODE HERE ====================
     
 
     return sens
@@ -150,8 +160,14 @@ def specificity(con_mat: np.ndarray) -> float:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    
-    # ==================== YOUR CODE HERE ====================
+    true_positive = con_mat[0,0]
+    false_negative = con_mat[0,1]
+    if true_positive+false_negative == 0:
+        spec = 0
+    else:
+        spec = true_positive/(true_positive+false_negative)
+
+        # ==================== YOUR CODE HERE ====================
     
 
     return spec
@@ -183,6 +199,12 @@ def precision(con_mat: np.ndarray) -> float:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    true_positive = con_mat[1,1]
+    false_negative = con_mat[0,1]
+    if true_positive+false_negative == 0:
+        prec = 0
+    else:
+        prec = true_positive/(true_positive+false_negative)
     
     # ==================== YOUR CODE HERE ====================
     

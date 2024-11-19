@@ -62,6 +62,9 @@ def logistic_regression_cv(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    log_reg = LogisticRegression(random_state=random_state, max_iter=max_iter, penalty='l2', solver='lbfgs')
+    param_grid_C = 1/lambdas
+    log_reg_cv =  GridSearchCV(log_reg, param_grid={'C': param_grid_C}, cv=k_folds, n_jobs=-1, scoring='roc_auc').fit(train_features, train_labels)
     
     # ==================== YOUR CODE HERE ====================
     
@@ -109,6 +112,9 @@ def gradient_boosting_cv(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
+    grad_boost_model = GradientBoostingClassifier(random_state=random_state)
+    grad_boost_cv =  GridSearchCV(grad_boost_model, param_grid={'n_estimators': n_estimators_list}, cv=k_folds,
+                                  n_jobs=-1, scoring='roc_auc').fit(train_features, train_labels)
     
     # ==================== YOUR CODE HERE ====================
     
