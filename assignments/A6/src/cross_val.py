@@ -113,8 +113,12 @@ def gradient_boosting_cv(
     
     # TODO: Implement
     grad_boost_model = GradientBoostingClassifier(random_state=random_state)
-    grad_boost_cv =  GridSearchCV(grad_boost_model, param_grid={'n_estimators': n_estimators_list}, cv=k_folds,
-                                  n_jobs=-1, scoring='roc_auc').fit(train_features, train_labels)
+    grad_boost_cv =  GridSearchCV(grad_boost_model,
+                                  param_grid={'n_estimators': n_estimators_list},
+                                  cv=k_folds,
+                                  n_jobs=-1,
+                                  scoring='roc_auc')
+    grad_boost_cv.fit(train_features, train_labels)
     
     # ==================== YOUR CODE HERE ====================
     

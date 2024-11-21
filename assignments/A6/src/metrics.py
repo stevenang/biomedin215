@@ -41,7 +41,6 @@ def accuracy(test_labels: np.ndarray, test_predictions: np.ndarray) -> float:
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    print((test_labels == test_predictions).sum(), len(test_labels))
     correct_count = (test_labels == test_predictions).sum()
     acc = correct_count / len(test_labels)
     
