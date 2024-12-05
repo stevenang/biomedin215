@@ -104,7 +104,9 @@ def gradient_boosted_tree(
     # ==================== YOUR CODE HERE ====================
     
     # TODO: Implement
-    grad_boost_model = GradientBoostingClassifier(n_estimators=n_estimators, random_state=random_state).fit(X_train, Y_train)
+    grad_boost_model = (GradientBoostingClassifier(n_estimators=n_estimators,
+                                                  random_state=random_state)
+                        .fit(X_train, Y_train))
     
     # ==================== YOUR CODE HERE ====================
     
