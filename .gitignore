@@ -1,0 +1,6 @@
+.python-version
+.idea/
+venv/
+
+A3/.venv/
+A3/.idea/
