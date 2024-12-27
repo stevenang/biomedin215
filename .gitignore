@@ -6,3 +6,5 @@ venv/
 /assignments/A4/.venv/
 /assignments/A5/.venv/
 /assignments/A6/.venv/
+
+/lectures/*/.DS_Store
