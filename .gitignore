@@ -2,5 +2,7 @@
 .idea/
 venv/
 
-A3/.venv/
-A3/.idea/
+/assignments/A3/.venv/
+/assignments/A4/.venv/
+/assignments/A5/.venv/
+/assignments/A6/.venv/
